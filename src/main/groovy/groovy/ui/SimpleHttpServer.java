@@ -17,17 +17,17 @@ import java.util.concurrent.Executors;
 /**
  * SimpleHTTPServer for Groovy, inspired by Python's SimpleHTTPServer
  */
-public class SimpleHTTPServer {
+public class SimpleHttpServer {
     private HttpServer server;
     private int port;
     private String contextRoot;
     private String docBase;
 
-    public SimpleHTTPServer(final int port) throws IOException {
+    public SimpleHttpServer(final int port) throws IOException {
         this(port, "/", ".");
     }
 
-    public SimpleHTTPServer(final int port, final String contextRoot, final String docBase) throws IOException {
+    public SimpleHttpServer(final int port, final String contextRoot, final String docBase) throws IOException {
         this.port = port;
         this.contextRoot = contextRoot.startsWith("/") ? contextRoot : ("/" + contextRoot);
         this.docBase = docBase;
@@ -43,7 +43,7 @@ public class SimpleHTTPServer {
                 try {
                     String uri = exchg.getRequestURI().getPath();
                     String path =
-                            !"/".equals(SimpleHTTPServer.this.contextRoot) && uri.startsWith(SimpleHTTPServer.this.contextRoot) ? uri.substring(SimpleHTTPServer.this.contextRoot.length()) : uri;
+                            !"/".equals(SimpleHttpServer.this.contextRoot) && uri.startsWith(SimpleHttpServer.this.contextRoot) ? uri.substring(SimpleHttpServer.this.contextRoot.length()) : uri;
 
                     content = readContent(path, docBase);
                     exchg.sendResponseHeaders(HttpURLConnection.HTTP_OK, content.length);
@@ -82,10 +82,10 @@ public class SimpleHTTPServer {
 
     public void start() {
         server.start();
-        System.out.println("HTTP Server started up, visit: http://localhost:" + this.port + this.contextRoot);
+        System.out.println("HTTP Server started up, visit http://localhost:" + this.port + this.contextRoot + "  to access the files in the " + this.docBase);
     }
 
     public static void main(String[] args) throws IOException {
-        new SimpleHTTPServer(8000).start();
+        new SimpleHttpServer(8000).start();
     }
 }
