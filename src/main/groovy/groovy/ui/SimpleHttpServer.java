@@ -3,6 +3,7 @@ package groovy.ui;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
+import org.codehaus.groovy.runtime.IOGroovyMethods;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -64,19 +65,10 @@ public class SimpleHttpServer {
         if ("/".equals(path)) {
             return "Groovy SimpleHTTPServer is running".getBytes();
         } else {
-            try (BufferedInputStream bis =
-                         new BufferedInputStream(
-                                 new FileInputStream(
-                                         new File((docBase + path).trim())));
-                 ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
-
-                byte[] buffer = new byte[8192];
-                for (int byteCnt; (byteCnt = bis.read(buffer)) != -1; ) {
-                    baos.write(buffer, 0, byteCnt);
-                }
-
-                return baos.toByteArray();
-            }
+            return IOGroovyMethods.getBytes(
+                    new BufferedInputStream(
+                            new FileInputStream(
+                                    new File((docBase + path).trim()))));
         }
     }
 
