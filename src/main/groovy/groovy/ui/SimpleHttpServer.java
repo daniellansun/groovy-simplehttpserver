@@ -46,7 +46,7 @@ public class SimpleHttpServer {
                     String path =
                             !"/".equals(SimpleHttpServer.this.contextRoot) && uri.startsWith(SimpleHttpServer.this.contextRoot) ? uri.substring(SimpleHttpServer.this.contextRoot.length()) : uri;
 
-                    content = readContent(path, docBase);
+                    content = readContent(docBase, path);
                     exchg.sendResponseHeaders(HttpURLConnection.HTTP_OK, content.length);
                     bos.write(content);
                 } catch (Exception e) {
@@ -61,7 +61,7 @@ public class SimpleHttpServer {
         });
     }
 
-    private byte[] readContent(String path, String docBase) throws IOException {
+    private byte[] readContent(String docBase, String path) throws IOException {
         if ("/".equals(path)) {
             return "Groovy SimpleHTTPServer is running".getBytes();
         } else {
@@ -74,10 +74,7 @@ public class SimpleHttpServer {
 
     public void start() {
         server.start();
-        System.out.println("HTTP Server started up, visit http://localhost:" + this.port + this.contextRoot + "  to access the files in the " + this.docBase);
+        System.out.println("HTTP Server started up, visit http://localhost:" + this.port + this.contextRoot + " to access the files in the " + this.docBase);
     }
 
-    public static void main(String[] args) throws IOException {
-        new SimpleHttpServer(8000).start();
-    }
 }
