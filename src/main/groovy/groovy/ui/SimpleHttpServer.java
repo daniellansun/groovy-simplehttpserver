@@ -7,13 +7,14 @@ import org.codehaus.groovy.runtime.IOGroovyMethods;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
 import java.util.concurrent.Executors;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 /**
  * SimpleHTTPServer for Groovy, inspired by Python's SimpleHTTPServer
@@ -22,13 +23,13 @@ public class SimpleHttpServer {
     private HttpServer server;
     private int port;
     private String contextRoot;
-    private String docBase;
+    private File docBase;
 
     public SimpleHttpServer(final int port) throws IOException {
-        this(port, "/", ".");
+        this(port, "/", new File("."));
     }
 
-    public SimpleHttpServer(final int port, final String contextRoot, final String docBase) throws IOException {
+    public SimpleHttpServer(final int port, final String contextRoot, final File docBase) throws IOException {
         this.port = port;
         this.contextRoot = contextRoot.startsWith("/") ? contextRoot : ("/" + contextRoot);
         this.docBase = docBase;
@@ -61,14 +62,40 @@ public class SimpleHttpServer {
         });
     }
 
-    private byte[] readContent(String docBase, String path) throws IOException {
+    private byte[] readContent(File docBase, String path) throws IOException {
         if ("/".equals(path)) {
             return "Groovy SimpleHTTPServer is running".getBytes();
         } else {
+            if (docBase.isDirectory()) {
+                return readFile(docBase, path);
+            } else {
+                return readZipEntry(docBase, path);
+            }
+        }
+    }
+
+    private byte[] readFile(File docBase, String path) throws IOException {
+        File file = new File((docBase.getCanonicalPath() + File.separator + path).trim());
+
+        if (file.isDirectory()) {
+            return ("Accessing the directory[" + file.getCanonicalPath() + "] is forbidden").getBytes();
+        } else {
             return IOGroovyMethods.getBytes(
                     new BufferedInputStream(
-                            new FileInputStream(
-                                    new File((docBase + path).trim()))));
+                            new FileInputStream(file)));
+        }
+    }
+
+    private byte[] readZipEntry(File docBase, String entryName) throws IOException {
+        entryName = entryName.startsWith("/") ? entryName.substring(1) : entryName;
+
+        try(ZipFile zf = new ZipFile(docBase);
+            BufferedInputStream bis =
+                    new BufferedInputStream(
+                            zf.getInputStream(
+                                    new ZipEntry(entryName)))) {
+
+            return IOGroovyMethods.getBytes(bis);
         }
     }
 
