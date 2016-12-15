@@ -13,6 +13,7 @@ Visit the following URL to access files
 ```
 
 **For example**
+
 1) listen on port 8000 and serve files under current directory
 ```
 groovy SimpleHttpServer
