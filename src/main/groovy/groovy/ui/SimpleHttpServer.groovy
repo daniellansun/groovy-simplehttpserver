@@ -1,29 +1,28 @@
-package groovy.ui;
+package groovy.ui
 
-import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
-import com.sun.net.httpserver.HttpServer;
-import org.codehaus.groovy.runtime.IOGroovyMethods;
+import com.sun.net.httpserver.HttpExchange
+import com.sun.net.httpserver.HttpHandler
+import com.sun.net.httpserver.HttpServer
+import groovy.transform.CompileStatic
+import org.codehaus.groovy.runtime.IOGroovyMethods
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.net.InetSocketAddress;
-import java.util.concurrent.Executors;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
+import java.util.concurrent.Executors
+import java.util.zip.ZipEntry
+import java.util.zip.ZipFile
 
 /**
  * SimpleHTTPServer for Groovy, inspired by Python's SimpleHTTPServer
  */
+@CompileStatic
 public class SimpleHttpServer {
     private HttpServer server;
     private int port;
     private String contextRoot;
     private File docBase;
+
+    public SimpleHttpServer() throws IOException {
+        this(8000);
+    }
 
     public SimpleHttpServer(final int port) throws IOException {
         this(port, "/", new File("."));
@@ -89,19 +88,44 @@ public class SimpleHttpServer {
     private byte[] readZipEntry(File docBase, String entryName) throws IOException {
         entryName = entryName.startsWith("/") ? entryName.substring(1) : entryName;
 
-        try(ZipFile zf = new ZipFile(docBase);
+        ZipFile zf = new ZipFile(docBase);
+        try {
+            ZipEntry ze = new ZipEntry(entryName);
+
+            if (ze.isDirectory()) {
+                return ("Accessing the directory entry[" + ze.name + "] is forbidden").getBytes();
+            }
+
             BufferedInputStream bis =
                     new BufferedInputStream(
-                            zf.getInputStream(
-                                    new ZipEntry(entryName)))) {
-
+                            zf.getInputStream(ze))
             return IOGroovyMethods.getBytes(bis);
+        } finally {
+            zf.close();
         }
     }
 
     public void start() {
         server.start();
-        System.out.println("HTTP Server started up, visit http://localhost:" + this.port + this.contextRoot + " to access the files in the " + this.docBase);
+        System.out.println("HTTP Server started up, visit http://localhost:" + this.port + this.contextRoot + " to access the files in the " + this.docBase.getCanonicalPath());
     }
 
+    public static void main(String[] args) {
+        int argCnt = args.length;
+        SimpleHttpServer shs;
+
+        if (0 == argCnt) {
+            shs = new SimpleHttpServer();
+        } else if (1 == argCnt) {
+            shs = new SimpleHttpServer(args[0] as int);
+        } else if (2 == argCnt) {
+            shs = new SimpleHttpServer(args[0] as int, "/", new File(args[1]));
+        } else if (3 == argCnt) {
+            shs = new SimpleHttpServer(args[0] as int, args[2], new File(args[1]));
+        } else {
+            throw new IllegalArgumentException("Too many arguments: " + (args as List) + ", usage: groovy SimpleHttpServer <port> <base dir / zip file> <context root>");
+        }
+
+        shs.start();
+    }
 }
