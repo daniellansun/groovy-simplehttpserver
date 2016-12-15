@@ -123,7 +123,7 @@ public class SimpleHttpServer {
         } else if (3 == argCnt) {
             shs = new SimpleHttpServer(args[0] as int, args[2], new File(args[1]));
         } else {
-            throw new IllegalArgumentException("Too many arguments: " + (args as List) + ", usage: groovy SimpleHttpServer <port> <base dir / zip file> <context root>");
+            throw new IllegalArgumentException("Too many arguments: " + (args as List) + ", usage: groovy SimpleHttpServer <port> <base dir|zip file> <context root>");
         }
 
         shs.start();
